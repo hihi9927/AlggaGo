@@ -6,7 +6,12 @@ from physics import scale_force
 import re
 from opponent import get_regular_action, get_split_shot_action
 
-MODEL_SAVE_DIR = "rl_models_competitive"
+# 파일 기준 경로 유틸
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+def rel_path(*parts):
+    return os.path.join(BASE_DIR, *parts)
+
+MODEL_SAVE_DIR = rel_path("rl_models_competitive")
 
 class MainRLAgent:
     """
@@ -15,6 +20,7 @@ class MainRLAgent:
     """
     def __init__(self, model_path=None):
         self.model = None
+        self.model_path = model_path
         if model_path and os.path.exists(model_path):
             try:
                 self.model = PPO.load(model_path)

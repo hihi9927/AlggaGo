@@ -9,6 +9,11 @@ import os
 import math
 from datetime import datetime
 
+# 프로젝트 루트/파일 기준 경로 유틸
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+def rel_path(*parts):
+    return os.path.join(BASE_DIR, *parts)
+
 from physics import (
     create_stone,
     reset_stones,
@@ -136,7 +141,7 @@ def predict_action_4d(model, obs, default_strategy=-1.0):
 
 def get_default_ai_agent():
     """기본 AI 에이전트를 반환하는 함수"""
-    model_path = "rl_models_competitive/AlggaGo1.5_324.zip"
+    model_path = rel_path("rl_models_competitive", "AlggaGo1.5_324.zip")
     if os.path.exists(model_path):
         print(f"[AI 선택] 기본 모델 '{model_path}'을(를) 사용합니다.")
         return MainRLAgent(model_path=model_path)
@@ -150,22 +155,22 @@ def get_ai_agent(game_mode, win_streak=0):
     """
     # 1번 모드 (알까기 챔피언십)의 경우, 연승에 따라 상대가 변경됨
     if game_mode == 1:
-        if 0 <= win_streak <= 2:  # 1~3라운드
-            model_path = "rl_models_competitive/AlggaGo1.0_180.zip"
+        if 0 <= win_streak <= 2:  # 1~3라운드: AlggaGo1.0
+            model_path = rel_path("rl_models_competitive", "AlggaGo1.0_180.zip")
             agent_name = "AlggaGo1.0"
-        elif 3 <= win_streak <= 5:  # 4~6라운드
+        elif 3 <= win_streak <= 5:  # 4~6라운드: Model C
             print(f"[AI 변경] {win_streak + 1}라운드 상대는 Model C 입니다.")
             return ModelCAgent()
-        else:  # 7라운드 이상
-            model_path = "rl_models_competitive/AlggaGo2.0.zip"
+        else:  # 7라운드 이상: AlggaGo2.0
+            model_path = rel_path("rl_models_competitive", "AlggaGo2.0.zip")
             agent_name = "AlggaGo2.0"
     # 2번 모드는 항상 AlggaGo2.0
     elif game_mode == 2:
-        model_path = "rl_models_competitive/AlggaGo1.5_324.zip"
+        model_path = rel_path("rl_models_competitive", "AlggaGo1.5_324.zip")
         agent_name = "AlggaGo2.0"
     # 그 외 모드는 AlggaGo1.0
     else:
-        model_path = "rl_models_competitive/AlggaGo1.0_180.zip"
+        model_path = rel_path("rl_models_competitive", "AlggaGo1.0_180.zip")
         agent_name = "AlggaGo1.0"
 
     if os.path.exists(model_path):
@@ -181,7 +186,7 @@ def get_ai_agent(game_mode, win_streak=0):
 
 def get_top_players():
     """CSV 파일에서 최다연승 순위를 가져오는 함수"""
-    csv_filename = "game_records.csv"
+    csv_filename = rel_path("game_records.csv")
     if not os.path.exists(csv_filename):
         return []
     
@@ -448,7 +453,7 @@ def select_game_mode(screen, clock, nickname):
 
 def save_game_record(nickname, win_streak, game_result, human_score, robot_score, game_mode=1):
     """게임 기록을 CSV 파일에 저장하는 함수"""
-    csv_filename = "game_records.csv"
+    csv_filename = rel_path("game_records.csv")
     file_exists = os.path.exists(csv_filename)
     
     with open(csv_filename, 'a', newline='', encoding='utf-8') as csvfile:
@@ -473,7 +478,7 @@ def save_game_record(nickname, win_streak, game_result, human_score, robot_score
 
 def save_vs_record(nickname, game_result, human_score, robot_score):
     """2번 모드용 전적 기록을 CSV 파일에 저장하는 함수"""
-    csv_filename = "vs_records.csv"
+    csv_filename = rel_path("vs_records.csv")
     file_exists = os.path.exists(csv_filename)
     
     with open(csv_filename, 'a', newline='', encoding='utf-8') as csvfile:
@@ -496,7 +501,7 @@ def save_vs_record(nickname, game_result, human_score, robot_score):
 
 def get_vs_stats():
     """2번 모드용 전적 통계를 가져오는 함수"""
-    csv_filename = "vs_records.csv"
+    csv_filename = rel_path("vs_records.csv")
     if not os.path.exists(csv_filename):
         return 0, 0  # human_wins, ai_wins
     
@@ -515,7 +520,7 @@ def get_vs_stats():
 
 def save_alggago2_record(nickname, game_result, human_score, robot_score):
     """AlggaGo 2.0 모드용 전적 기록을 CSV 파일에 저장하는 함수"""
-    csv_filename = "alggago2_records.csv"
+    csv_filename = rel_path("alggago2_records.csv")
     file_exists = os.path.exists(csv_filename)
     
     with open(csv_filename, 'a', newline='', encoding='utf-8') as csvfile:
@@ -535,7 +540,7 @@ def save_alggago2_record(nickname, game_result, human_score, robot_score):
 
 def get_alggago2_stats():
     """AlggaGo 2.0 모드용 전적 통계를 가져오는 함수"""
-    csv_filename = "alggago2_records.csv"
+    csv_filename = rel_path("alggago2_records.csv")
     if not os.path.exists(csv_filename):
         return 0, 0  # human_wins, ai_wins
     
@@ -554,7 +559,7 @@ def get_alggago2_stats():
 
 def get_leesedol_hall_of_fame():
     """이세돌 모드에서 HUMAN_WIN을 기록한 닉네임들을 집합으로 수집해 정렬된 리스트로 반환"""
-    csv_filename = "leesedol_records.csv"
+    csv_filename = rel_path("leesedol_records.csv")
     hall = set()
     if os.path.exists(csv_filename):
         with open(csv_filename, 'r', encoding='utf-8') as csvfile:
@@ -566,7 +571,7 @@ def get_leesedol_hall_of_fame():
 
 def save_leesedol_record(nickname, game_result, human_score, robot_score):
     """3번 모드용 전적 기록을 CSV 파일에 저장하는 함수"""
-    csv_filename = "leesedol_records.csv"
+    csv_filename = rel_path("leesedol_records.csv")
     file_exists = os.path.exists(csv_filename)
     
     with open(csv_filename, 'a', newline='', encoding='utf-8') as csvfile:
@@ -589,7 +594,7 @@ def save_leesedol_record(nickname, game_result, human_score, robot_score):
 
 def get_leesedol_win_order(nickname):
     """3번 모드에서 특정 닉네임의 승리 순서를 가져오는 함수"""
-    csv_filename = "leesedol_records.csv"
+    csv_filename = rel_path("leesedol_records.csv")
     if not os.path.exists(csv_filename):
         return 0
     
@@ -606,7 +611,7 @@ def get_leesedol_win_order(nickname):
 
 def get_leesedol_stats():
     """3번 모드용 전적 통계를 가져오는 함수"""
-    csv_filename = "leesedol_records.csv"
+    csv_filename = rel_path("leesedol_records.csv")
     if not os.path.exists(csv_filename):
         return 0, 0  # human_wins, ai_wins
     
@@ -626,7 +631,7 @@ def get_leesedol_stats():
 
 def get_leesedol_attempt_count(nickname):
     """3번 모드에서 전체 총 도전 횟수를 가져오는 함수 (닉네임 상관없이)"""
-    csv_filename = "leesedol_records.csv"
+    csv_filename = rel_path("leesedol_records.csv")
     if not os.path.exists(csv_filename):
         return 0
     
@@ -641,7 +646,7 @@ def get_leesedol_attempt_count(nickname):
 
 def save_custom_placement_record(nickname, game_result, human_score, robot_score):
     """4번 모드용 전적 기록을 CSV 파일에 저장하는 함수"""
-    csv_filename = "custom_placement_records.csv"
+    csv_filename = rel_path("custom_placement_records.csv")
     file_exists = os.path.exists(csv_filename)
     
     with open(csv_filename, 'a', newline='', encoding='utf-8') as csvfile:
@@ -664,7 +669,7 @@ def save_custom_placement_record(nickname, game_result, human_score, robot_score
 
 def get_custom_placement_stats():
     """4번 모드용 전적 통계를 가져오는 함수"""
-    csv_filename = "custom_placement_records.csv"
+    csv_filename = rel_path("custom_placement_records.csv")
     if not os.path.exists(csv_filename):
         return 0, 0  # human_wins, ai_wins
     
@@ -684,7 +689,7 @@ def get_custom_placement_stats():
 
 def save_basic_ai_record(nickname, game_result, human_score, robot_score):
     """5번 모드용 전적 기록을 CSV 파일에 저장하는 함수"""
-    csv_filename = "basic_ai_records.csv"
+    csv_filename = rel_path("basic_ai_records.csv")
     file_exists = os.path.exists(csv_filename)
     
     with open(csv_filename, 'a', newline='', encoding='utf-8') as csvfile:
@@ -707,7 +712,7 @@ def save_basic_ai_record(nickname, game_result, human_score, robot_score):
 
 def get_basic_ai_stats():
     """5번 모드용 전적 통계를 가져오는 함수"""
-    csv_filename = "basic_ai_records.csv"
+    csv_filename = rel_path("basic_ai_records.csv")
     if not os.path.exists(csv_filename):
         return 0, 0  # human_wins, ai_wins
     
@@ -726,7 +731,7 @@ def get_basic_ai_stats():
 
 def save_beginner_mode_record(nickname, game_result, human_score, robot_score):
     """6번 모드(초보자용) 전적 기록을 CSV 파일에 저장하는 함수"""
-    csv_filename = "beginner_mode_records.csv"
+    csv_filename = rel_path("beginner_mode_records.csv")
     file_exists = os.path.exists(csv_filename)
     
     with open(csv_filename, 'a', newline='', encoding='utf-8') as csvfile:
@@ -749,7 +754,7 @@ def save_beginner_mode_record(nickname, game_result, human_score, robot_score):
 
 def get_beginner_mode_stats():
     """6번 모드(초보자용) 전적 통계를 가져오는 함수"""
-    csv_filename = "beginner_mode_records.csv"
+    csv_filename = rel_path("beginner_mode_records.csv")
     if not os.path.exists(csv_filename):
         return 0, 0  # human_wins, ai_wins
     
@@ -864,7 +869,7 @@ def show_game_result(screen, clock, nickname, human_score, robot_score, winner, 
         top_players = get_top_players()
 
         # --- 전체 플레이어 기록 불러오기 (랭킹 산정용) ---
-        csv_filename = "game_records.csv"
+        csv_filename = rel_path("game_records.csv")
         all_records = []
         if os.path.exists(csv_filename):
             with open(csv_filename, 'r', encoding='utf-8') as csvfile:
@@ -1440,10 +1445,11 @@ def play_game(screen, clock, nickname, game_mode):
             return True  # 취소된 경우 메인 메뉴로 돌아가기
     
     # 기본 AI 에이전트 선택
-    white_rl_agent = get_ai_agent(game_mode)
+    win_streak = 0  # 연승 카운터 (모드 1에서 라운드 사이 유지)
+    white_rl_agent = get_ai_agent(game_mode, win_streak)
     
     pygame.mixer.init()
-    collision_sound = pygame.mixer.Sound("collision.mp3")
+    collision_sound = pygame.mixer.Sound(rel_path("collision.mp3"))
     collision_sound.set_volume(1.0)
     
     # 게임 초기화
@@ -1458,7 +1464,7 @@ def play_game(screen, clock, nickname, game_mode):
     else:
         turn = "black"  # 1, 2, 4, 5번 모드: 인간(흑돌) 먼저 시작
     
-    win_streak = 0  # 연승 카운터
+    # win_streak는 위에서 초기화됨
 
     # 물리 공간 설정
     space = pymunk.Space()
@@ -1812,7 +1818,10 @@ def play_game(screen, clock, nickname, game_mode):
             # 새로운 게임 시작 (1번 모드에서만)
             if game_mode == 1:
                 black_count, white_count = reset_stones(space, stones)
-                turn = "black" # 다시 인간(흑돌) 턴부터 시작
+                # 연승 수에 따라 상대 에이전트를 갱신 (1승부터 Model C)
+                white_rl_agent = get_ai_agent(game_mode, win_streak)
+                turn = "black"  # 다시 인간(흑돌) 턴부터 시작
+                turn_text = f"Your Turn (Black)"
             
         # ────────── 렌더링 ──────────
         screen.fill((150, 150, 150))

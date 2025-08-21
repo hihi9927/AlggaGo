@@ -19,11 +19,16 @@ from gymnasium import spaces
 from env import AlggaGoEnv
 from physics import WIDTH, HEIGHT, all_stones_stopped, MARGIN
 
+# --- 경로 유틸 ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+def rel_path(*parts):
+    return os.path.join(BASE_DIR, *parts)
+
 # --- 하이퍼파라미터 및 설정 ---
 MAX_STAGES = 300
 TIMESTEPS_PER_STAGE = 50000
-SAVE_DIR = "rl_models_competitive"
-LOG_DIR = "rl_logs_competitive"
+SAVE_DIR = rel_path("rl_models_competitive")
+LOG_DIR = rel_path("rl_logs_competitive")
 INITIAL_ENT_COEF_A = 0.15
 INITIAL_ENT_COEF_B = 0.1
 ENT_COEF_INCREMENT = 0.1
