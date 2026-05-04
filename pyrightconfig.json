@@ -1,0 +1,10 @@
+{
+  "include": [
+    "main.py",
+    "train.py",
+    "src"
+  ],
+  "extraPaths": [
+    "src"
+  ]
+}

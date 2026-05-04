@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import numpy; print\\(numpy.__version__\\)\")",
+      "Bash(C:/Users/gyuye/anaconda3/python.exe -c \"import numpy; print\\(numpy.__version__\\); print\\(numpy.__file__\\)\")",
+      "Bash(grep -r \"\\\\.csv\" *.py)",
+      "Bash(grep -rn \"range_rl_models\\\\|rl_models_competitive\\\\|rl_logs\" *.py)",
+      "Bash(grep -rn \"range_rl\" *.py)",
+      "Bash(grep -rn \"model_a\\\\|model_b\" *.py)",
+      "Bash(mkdir -p records)",
+      "Bash(mv *.csv records/)",
+      "Bash(rm -rf __pycache__ range_rl_models)",
+      "Bash(mv opponent_c.py model_c.py)",
+      "Bash(sed -i 's/from opponent_c import/from model_c import/g; s/import opponent_c/import model_c/g' agent.py main.py train.py)",
+      "Bash(python -c \"from env import AlggaGoEnv; print\\('OK'\\)\")",
+      "Bash(python -c \"from reward import reward_fn; from env import AlggaGoEnv; env = AlggaGoEnv\\(reward_fn=reward_fn\\); print\\('OK'\\)\")",
+      "Bash(python -c ':*)",
+      "Bash(python -m pyright --outputjson)",
+      "Bash(npx pyright *)",
+      "Bash(python3 -c ' *)",
+      "Bash(git remote *)"
+    ]
+  }
+}
