@@ -40,35 +40,42 @@ def reward_fn(player, prev_black, prev_white, curr_black, curr_white, info):
     # 틈새 공격: 위치 품질이 곧 보상
     if strategy_choice == 1:
         reward = wedge_reward
+        ally_count = curr_white; opponent_count = curr_black
+        if player == "black":
+            ally_count = curr_black; opponent_count = curr_white
+        
+        if opponent_count >= 3 or ally_count >= 3:
+            reward -= 4
+        
     else:
         # 일반 공격: 제거한 상대 돌 수에 따라 누진 보상
         removed_count = white_removed if player == "black" else black_removed
-        if removed_count == 1:   reward += 1
-        elif removed_count == 2: reward += 3
-        elif removed_count == 3: reward += 5
-        elif removed_count >= 4: reward += 7
+        if removed_count == 1:   reward += 3
+        elif removed_count == 2: reward += 4
+        elif removed_count == 3: reward += 6
+        elif removed_count >= 4: reward += 6
         # 좋은 위치에 착지했다면 추가 보상
         if wedge_reward > 0:
             reward += wedge_reward
 
     # 내 돌 제거 패널티
     if player == 'black':
-        if black_removed == 1:   reward -= 2
+        if black_removed == 1:   reward -= 3
         elif black_removed == 2: reward -= 4
-        elif black_removed == 3: reward -= 6
+        elif black_removed == 3: reward -= 5
     else:
-        if white_removed == 1:   reward -= 2
+        if white_removed == 1:   reward -= 3
         elif white_removed == 2: reward -= 4
-        elif white_removed == 3: reward -= 6
+        elif white_removed == 3: reward -= 5
 
     # 승리/패배 보너스 (남은 돌 수 비례)
     if winner == 'white':
         margin = curr_white
-        W = 1.5 + 3.0 * (margin - 1) if margin > 0 else 0
+        W = 2.0 + 3.0 * (margin - 1) if margin > 0 else 0
         reward += W if player == 'white' else -W
     elif winner == 'black':
         margin = curr_black
-        W = 1.5 + 3.0 * (margin - 1) if margin > 0 else 0
+        W = 2.0 + 3.0 * (margin - 1) if margin > 0 else 0
         reward += W if player == 'black' else -W
 
     return reward

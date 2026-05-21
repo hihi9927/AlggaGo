@@ -55,7 +55,8 @@ def model_c_action(stones, player_color):
     if not player_stones or not opponent_stones: return None
 
     # 1 vs 2 스플릿 샷 로직
-    if len(player_stones) == 1 and len(opponent_stones) == 2:
+    # model C의 성능을 약화하기 위해 split shot이 40%의 확률로 일어나게 함
+    if len(player_stones) == 1 and len(opponent_stones) == 2 and np.random.rand() < 0.4:
         try:
             stone1, stone2 = opponent_stones[0], opponent_stones[1]
             target_pos = (stone1.body.position + stone2.body.position) / 2

@@ -5,16 +5,16 @@ from dataclasses import dataclass
 @dataclass
 class TrainingConfig:
     max_stages: int = 300
-    timesteps_per_stage: int = 50000
+    timesteps_per_stage: int = 30000
     save_dir: str = "rl_models_competitive"
     log_dir: str = "rl_logs_competitive"
     initial_ent_coef_a: float = 0.05
     initial_ent_coef_b: float = 0.1
     ent_coef_increment: float = 0.1
     max_ent_coef: float = 0.5
-    eval_episodes_for_competition: int = 200
-    gauntlet_eval_episodes_per_color: int = 100
-    gauntlet_timesteps: int = 50000
+    eval_episodes_for_competition: int = 300
+    gauntlet_eval_episodes_per_color: int = 150
+    gauntlet_timesteps: int = 30000
     n_envs_vs_c: int = 2
     n_envs_self_play: int = 2
     best_model_filename: str = "best_model.zip"

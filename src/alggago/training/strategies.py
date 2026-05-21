@@ -32,6 +32,7 @@ from .model_utils import (
     initialize_to_rule_based,
     load_training_state,
     make_env_fn,
+    reload_with_env,
     save_training_state,
     update_best_models,
 )
@@ -95,7 +96,7 @@ def run_gauntlet_training(model_to_train, model_name, initial_timesteps):
             visualize_split_shot_debug(model_to_train)
         else:
             print(f"   - 전달된 모델(Model {model_name})의 학습 상태를 유지하며 예선전을 시작합니다.")
-            model_to_train.set_env(gauntlet_env)
+            model_to_train = reload_with_env(model_to_train, gauntlet_env)
 
         print("\n--- 훈련 시작 전 초기 상태 종합 평가 시작 ---")
         model_to_train.ent_coef = 0.0
@@ -153,7 +154,7 @@ def run_gauntlet_training(model_to_train, model_name, initial_timesteps):
         print("\n[INFO] 다음 학습 전략 설정...")
         
         # 성공률에 따라 각 보너스 모드를 개별적으로 활성화
-        regular_bonus_active = (reg_success < 0.8)
+        regular_bonus_active = (reg_success < 0.95)
         split_bonus_active = (split_success < 0.8)
 
         if regular_bonus_active:
@@ -207,6 +208,7 @@ def run_competitive_training():
             writer.writerow(["Round", "Total Timesteps", "Win Rate as Black", "Win Rate as White", "Overall Win Rate", "Neg Strategy Ratio"])
     
     # 상태 로드 또는 새로 시작
+    # state는 dictionary이며, 모델과 관련된 변수 저장
     state = load_training_state() or {}
     total_timesteps_so_far = state.get("total_timesteps_so_far", 0)
     current_ent_coef_A = state.get("current_ent_coef_A", INITIAL_ENT_COEF_A)
@@ -320,7 +322,7 @@ def run_competitive_training():
 
         # 아래 3줄만 남기고 나머지는 삭제합니다.
         train_env.env_method("set_opponent", opponent_model)
-        model_to_train.set_env(train_env)
+        model_to_train = reload_with_env(model_to_train, train_env)
         print(f"   학습 대상: Model {current_training_model_name} (ent_coef: {ent_coef_train:.5f})")
         
         model_to_train.learn(total_timesteps=TIMESTEPS_PER_STAGE, callback=ProgressCallback(TIMESTEPS_PER_STAGE), reset_num_timesteps=False)

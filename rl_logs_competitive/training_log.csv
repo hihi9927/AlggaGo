@@ -1,1 +1,5 @@
 Stage,Total Timesteps,Model A Entropy,Model B Entropy,Round 1 Win Rate (A Black),Round 2 Win Rate (B Black)
+3,98304,0.05000,0.10000,0.6667,0.7267
+3,98304,0.05000,0.10000,0.7000,0.6000
+4,131072,0.05000,0.10000,0.6333,0.6800
+5,98304,0.15000,0.10000,0.6800,0.6400

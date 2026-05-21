@@ -41,7 +41,7 @@ class AlggaGoEnv(gym.Env):
         self.stones = []
         self.space = pymunk.Space()
         self.current_player = "black"
-        self.exploration_range = {"index": 1.0, "angle": np.pi / 4, "force": 0.5}
+        self.exploration_range = {"index": 0.8, "angle": np.pi / 6, "force": 0.5}
         self.regular_bonus_mode = False
         self.split_bonus_mode = False
         self.reset()
@@ -128,18 +128,21 @@ class AlggaGoEnv(gym.Env):
         if len(opponent_stones) < 2:
             strategy_choice = 0
         else:
+            # Softmax 
             strategy_preferences = np.asarray(action[:2], dtype=np.float32)
+            # 최댓값으로 나눔으로써 값이 폭발하는 걸 방지
             max_pref = float(np.max(strategy_preferences)); exp_p = np.exp(strategy_preferences - max_pref)
             probs = exp_p / (np.sum(exp_p) + 1e-8)
-            if not np.all(np.isfinite(probs)) or probs.sum() <= 0:
+            if not np.all(np.isfinite(probs)) or probs.sum() <= 0: # 확률 값이 정상이 아닌 경우: preference가 큰 걸로 선택(deterministic)
                 strategy_choice = int(np.argmax(strategy_preferences))
-            else:
+            else: # 정상적인 확률 값의 경우: softmax로 변환된 확률에 따라 행동 선택
                 strategy_choice = int(np.random.choice(2, p=probs))
 
         rule_action = get_split_shot_action(player_stones, opponent_stones) if strategy_choice == 1 else get_regular_action(player_stones, opponent_stones)
         if rule_action is None: rule_action = get_regular_action(player_stones, opponent_stones)
         if rule_action is None: return self._get_obs(), 0.0, True, False, {}
         
+        # 돌 선택, 각도, 힘에 대한 행동
         raw_idx_val, raw_angle_val, raw_force_val = action[2:]
         raw_index = np.clip(raw_idx_val, -1.0, 1.0)
         raw_angle = np.clip(raw_angle_val, -1.0, 1.0)
@@ -164,6 +167,7 @@ class AlggaGoEnv(gym.Env):
         selected_stone_to_shoot = player_stones[final_idx]
         direction = Vec2d(1, 0).rotated(final_angle)
         impulse = direction * scale_force(final_force)
+        # 계산한 걸 바탕으로 쏘기
         selected_stone_to_shoot.body.apply_impulse_at_world_point(impulse, selected_stone_to_shoot.body.position)
 
         physics_step_count = 0
@@ -193,7 +197,7 @@ class AlggaGoEnv(gym.Env):
                 t = w.dot(v) / (v.dot(v) + 1e-6)
                 if 0 < t < 1:
                     dist_to_segment = (p3 - (p1 + t * v)).length
-                    wedge_threshold = STONE_RADIUS
+                    wedge_threshold = STONE_RADIUS / 2
                     if dist_to_segment < wedge_threshold:
                         current_reward = (1 - (dist_to_segment / wedge_threshold)) * 0.5
                         if current_reward > max_wedge_reward:
@@ -201,7 +205,7 @@ class AlggaGoEnv(gym.Env):
 
         wedge_reward = max_wedge_reward
         if strategy_choice == 1 and wedge_reward == 0.0:
-            wedge_reward = -0.5
+            wedge_reward -= 1.5
 
         if current_black == 0 and current_white > 0:
             terminated = True; info['winner'] = 'white'
@@ -223,7 +227,7 @@ class AlggaGoEnv(gym.Env):
             )
 
         if self.regular_bonus_mode and info['is_regular_success']:
-            reward += 2.0
+            reward += 3.0
         if self.split_bonus_mode and info['is_split_success']:
             reward += 2.0
 
