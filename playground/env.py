@@ -271,10 +271,10 @@ class BilliardEnv:
     def _reward(self) -> float:
         n = sum(self.hit)
         black_alive = self.black in self.space.shapes
-        if n == 2 and black_alive: return 0.0   # 1타2피
-        if n >= 1:                 return 0.0   # 1타1피
-        if self._white_contacted:  return 0.0   # 맞혔지만 탈락 못 시킴
-        return 0.0                              # 완전 miss
+        if n == 2 and black_alive: return 2.0   # 1타2피
+        if n >= 1:                 return 1.0   # 1타1피
+        if self._white_contacted:  return -0.1   # 맞혔지만 탈락 못 시킴
+        return -0.5                              # 완전 miss
 
     # ── Observation ────────────────────────────────────────────────────────────
     def _obs(self) -> np.ndarray:
