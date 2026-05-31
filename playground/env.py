@@ -215,7 +215,9 @@ class BilliardEnv:
         impulse   = direction * scale_force(force_norm)
         self.black.body.apply_impulse_at_world_point(impulse, self.black.body.position)
         reward = self._simulate()
-        return self._obs(), reward, True, {"hits": sum(self.hit)}
+        black_alive = self.black in self.space.shapes
+
+        return self._obs(), reward, True, {"hits": sum(self.hit), "alive": black_alive, "touched": self._white_contacted }
 
     def _simulate(self) -> float:
         """Run physics until stopped (max 600 steps = ~10 s). Returns reward."""
@@ -271,10 +273,17 @@ class BilliardEnv:
     def _reward(self) -> float:
         n = sum(self.hit)
         black_alive = self.black in self.space.shapes
-        if n == 2 and black_alive: return 0.0   # 1타2피
-        if n >= 1:                 return 0.0   # 1타1피
-        if self._white_contacted:  return 0.0   # 맞혔지만 탈락 못 시킴
-        return 0.0                              # 완전 miss
+
+        if black_alive:
+            if n == 2: return 3.0
+            if n == 1: return 2.0
+            if self._white_contacted: return 1.0
+            return -2.0
+        else:
+            if n == 2: return 3.0
+            if n == 1: return 2.0
+            if self._white_contacted: return 0.5
+            return -2.0
 
     # ── Observation ────────────────────────────────────────────────────────────
     def _obs(self) -> np.ndarray:
