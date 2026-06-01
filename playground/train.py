@@ -19,7 +19,7 @@ def train(episodes=10000, render_every=1000, model_path=_DEFAULT_MODEL, log_path
         ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         log_path = os.path.join(_LOGS_DIR, f"log_{ts}.csv")
     env   = BilliardEnv(render=False)
-    agent = Agent(lr=5e-4)
+    agent = Agent(lr=3e-3)
     counts       = {0: 0, 1: 0, 2: 0}
     total_reward = 0.0
 
@@ -50,8 +50,8 @@ def train(episodes=10000, render_every=1000, model_path=_DEFAULT_MODEL, log_path
                 counts       = {0: 0, 1: 0, 2: 0}
                 total_reward = 0.0
 
-            if ep % render_every == 0:
-                _demo(agent)
+        if ep % render_every == 0:
+            _demo(agent)
 
     agent.save(model_path)
     print(f"저장 완료: {model_path}")
