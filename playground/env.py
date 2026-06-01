@@ -100,6 +100,7 @@ class BilliardEnv:
         self.black:             pymunk.Shape
         self.whites:            list = []
         self.hit:               list = [False, False]
+        self.first_hit_black_pos: tuple = (0, 0)
         self._white_contacted:  bool = False
         self.done:              bool = False
         self.screen: pygame.Surface | None = None
@@ -235,11 +236,16 @@ class BilliardEnv:
                     self.space.remove(self.black, self.black.body)
 
             for i, w in enumerate(self.whites):
+                x, y = w.body.position
+                bx, by = self.black.body.position
                 if w in self.space.shapes:
-                    x, y = w.body.position
+                    #x, y = w.body.position
                     if not (MARGIN < x < WIDTH - MARGIN and MARGIN < y < HEIGHT - MARGIN):
                         self.hit[i] = True
                         self.space.remove(w, w.body)
+                if (not self._white_contacted) and (x - bx) * (x - bx) + (y - by) * (y - by) < STONE_RADIUS * STONE_RADIUS:
+                    self._white_contacted = True
+                    self.first_hit_black_pos = (bx, by)
 
             if self.do_render:
                 self.draw()
@@ -273,6 +279,9 @@ class BilliardEnv:
     def _reward(self) -> float:
         n = sum(self.hit)
         black_alive = self.black in self.space.shapes
+
+        if self._white_contacted:
+
 
         if black_alive:
             if n == 2: return 3.0

@@ -66,7 +66,8 @@ def play():
                     impulse = raw_vec.normalized() * (dist * FORCE_MULTIPLIER + MIN_FORCE)
                     env.shoot_raw(impulse)
                     hits    = sum(env.hit)
-                    message = ["miss (-1)  |  R: 리셋",
+                    bx, by = env.black.body.position
+                    message = [f"{bx}, {by}",
                                "1타1피! (+1)  |  R: 리셋",
                                "1타2피!! (+3)  |  R: 리셋"][hits]
 

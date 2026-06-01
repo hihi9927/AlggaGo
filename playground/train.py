@@ -1,5 +1,6 @@
 import csv
 import os
+import json
 import time
 import datetime
 import pygame
@@ -11,64 +12,85 @@ _MODELS_DIR = os.path.join(_HERE, "models")
 _LOGS_DIR = os.path.join(_HERE, "logs")
 _DEFAULT_MODEL = os.path.join(_MODELS_DIR, "model.pth")
 
+COUNTER_FILE = "model_counter.json"
 
-def train(episodes=5000, save_every=1000, model_path=_DEFAULT_MODEL, log_path=None):
+def load_counter():
+    path = os.path.join(_HERE, COUNTER_FILE)
+    if os.path.exists(path):
+        with open(path) as f:
+            return json.load(f)["last_model_no"]
+    return 0
+
+def save_counter(no=0):
+    path = os.path.join(_HERE, COUNTER_FILE)
+    with open(path, "w") as f:
+        json.dump({"last_model_no": no}, f)
+
+
+def train(episodes=5000, train_section=500, n_test=50, save_every=1000, model_no=None, model_path=_DEFAULT_MODEL, log_path=None):
     os.makedirs(_MODELS_DIR, exist_ok=True)
     os.makedirs(_LOGS_DIR, exist_ok=True)
-    if log_path is None:
+    if model_no is None or log_path is None:
+        model_no = load_counter() + 1
+        model_path = os.path.join(_MODELS_DIR, f"model_{model_no}.pth")
         ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_path = os.path.join(_LOGS_DIR, f"log_{ts}.csv")
+        log_path = os.path.join(_LOGS_DIR, f"log_model_{model_no}_[{ts}].csv")
+
     env   = BilliardEnv(render=False)
     agent = Agent(lr=5e-4)
-    counts       = {0: 0, 1: 0, 2: 0}
+    # counts = ["miss", "one", "two", "black alive", "white touch"]
+    counts       = [0, 0, 0, 0, 0]
+    episode_elapsed = 0
     total_reward = 0.0
-    alive_cnt = 0
-    touch_cnt = 0
+    save_timing = 0
 
     with open(log_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["episode", "miss", "1피", "2피", "총보상"])
 
-        for ep in range(1, episodes + 1):
-            obs          = env.reset()
-            angle, force = agent.act(obs)
-            _, reward, _, info = env.step(angle, force)
-            agent.learn(reward)
-            counts[info["hits"]] += 1
-            total_reward += reward
-            black_alive = info["alive"]
-            white_touched = info["touched"]
-            if black_alive: alive_cnt += 1
-            if white_touched: touch_cnt += 1
+        while episode_elapsed <= episodes:
+            # Training for a certain number of episodes
+            for ep in range(train_section):
+                obs = env.reset()
+                angle, force = agent.act(obs)
+                _, reward, _, info = env.step(angle, force)
+                agent.learn(reward)
             
-            if ep % 100 == 0:
-                total = sum(counts.values())
-                miss_r  = counts[0] / total
-                one_r   = counts[1] / total
-                two_r   = counts[2] / total
-                alive_r = alive_cnt / total
-                touch_r = touch_cnt / total
-                print(f"[{ep:6d}/{episodes}]  "
+            episode_elapsed += train_section
+
+            # Test the trained model and write the log
+            for tc in range(1, n_test + 1):
+                obs = env.reset()
+                angle, force = agent.act(obs, greedy=True)
+                _, reward, _, info = env.step(angle, force)
+                total_reward += reward
+                counts[info["hits"]] += 1; counts[3] += info["alive"]; counts[4] += info["touched"]
+
+            total_trial = counts[0] + counts[1] + counts[2]
+            miss_r = counts[0] / total_trial
+            one_r = counts[1] / total_trial
+            two_r = counts[2] / total_trial
+            alive_r = counts[3] / total_trial
+            touch_r = counts[4] / total_trial
+            print(f"[{episode_elapsed:6d}/{episodes}]  "
                       f"miss:{miss_r:.0%}  "
                       f"1피:{one_r:.0%}  "
                       f"2피:{two_r:.0%}  "
                       f"총보상:{total_reward:.1f}  "
                       f"생존:{alive_r}  "
                       f"터치:{touch_r}")
-                writer.writerow([ep, f"{miss_r:.4f}", f"{one_r:.4f}", f"{two_r:.4f}", f"{total_reward:.2f}", f"{alive_r}", f"{touch_r}"])
-                f.flush()
-                counts       = {0: 0, 1: 0, 2: 0}
-                total_reward = 0.0
-                alive_cnt = 0
-                touch_cnt = 0
+            writer.writerow([episode_elapsed, f"{miss_r:.4f}", f"{one_r:.4f}", f"{two_r:.4f}", f"{total_reward:.2f}", f"{alive_r}", f"{touch_r}"])
+            f.flush()
+            counts = [0, 0, 0, 0, 0]
+            total_reward = 0.0
 
-                for _ in range(3):
-                    _demo(agent)
-
-            if ep % save_every == 0:
-
+            if episode_elapsed % save_every > save_timing:
                 agent.save(model_path)
-                print(f"저장 완료: {model_path}")
+                print(f"Save complete: {model_path}")
+                save_timing = episode_elapsed % save_every
+            
+
+        
 
 
 def _demo(agent):
