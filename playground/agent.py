@@ -3,21 +3,19 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import time
-from pymunk import Vec2d
-import numpy as np
 
 
 class PolicyNet(nn.Module):
     def __init__(self):
         super().__init__()
         self.fc = nn.Sequential(
-            nn.Linear(5, 128), nn.ReLU(),
+            nn.Linear(6, 128), nn.ReLU(),
             nn.Linear(128, 64), nn.ReLU(),
         )
         self.angle_head = nn.Sequential(nn.Linear(64, 1), nn.Tanh())
         self.force_head = nn.Sequential(nn.Linear(64, 1), nn.Sigmoid())
-        self.log_std_angle = nn.Parameter(torch.tensor(0.0))
-        self.log_std_force = nn.Parameter(torch.tensor(0.0))
+        self.log_std_angle = nn.Parameter(torch.tensor(0.1))
+        self.log_std_force = nn.Parameter(torch.tensor(-1.0))
 
     def forward(self, x):
         feat        = self.fc(x)
@@ -36,14 +34,7 @@ class Agent:
         self.baseline = 0.0
 
     def act(self, obs, greedy=False):
-        # obs: np array [bx, by, w1x, w1y, w2x, w2y]
-        v1 = Vec2d(obs[2] - obs[0], obs[3] - obs[1])
-        v2 = Vec2d(obs[4] - obs[0], obs[5] - obs[1])
-        theta = v1.get_angle_between(v2)
-
-        t = torch.FloatTensor(np.array([v1.x, v1.y, v2.x, v2.y, theta], dtype=np.float32)).unsqueeze(0)
-        
-        
+        t = torch.FloatTensor(obs).unsqueeze(0)
         mean_angle, std_angle, mean_force, std_force = self.net(t)
         if greedy:
             return mean_angle.item(), mean_force.item()
@@ -58,7 +49,7 @@ class Agent:
         if self._lp is None:
             return 0.0
         adv = reward - self.baseline
-        self.baseline += 0.3 * adv
+        self.baseline += 0.1 * adv
         loss = -self._lp * adv
         #self.opt.zero_grad()
         loss.backward()

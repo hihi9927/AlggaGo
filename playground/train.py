@@ -12,7 +12,7 @@ _LOGS_DIR = os.path.join(_HERE, "logs")
 _DEFAULT_MODEL = os.path.join(_MODELS_DIR, "model.pth")
 
 
-def train(episodes=5000, save_every=1000, model_path=_DEFAULT_MODEL, log_path=None):
+def train(episodes=10000, render_every=1000, model_path=_DEFAULT_MODEL, log_path=None):
     os.makedirs(_MODELS_DIR, exist_ok=True)
     os.makedirs(_LOGS_DIR, exist_ok=True)
     if log_path is None:
@@ -22,8 +22,6 @@ def train(episodes=5000, save_every=1000, model_path=_DEFAULT_MODEL, log_path=No
     agent = Agent(lr=5e-4)
     counts       = {0: 0, 1: 0, 2: 0}
     total_reward = 0.0
-    alive_cnt = 0
-    touch_cnt = 0
 
     with open(log_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
@@ -36,39 +34,27 @@ def train(episodes=5000, save_every=1000, model_path=_DEFAULT_MODEL, log_path=No
             agent.learn(reward)
             counts[info["hits"]] += 1
             total_reward += reward
-            black_alive = info["alive"]
-            white_touched = info["touched"]
-            if black_alive: alive_cnt += 1
-            if white_touched: touch_cnt += 1
-            
+
             if ep % 100 == 0:
                 total = sum(counts.values())
                 miss_r  = counts[0] / total
                 one_r   = counts[1] / total
                 two_r   = counts[2] / total
-                alive_r = alive_cnt / total
-                touch_r = touch_cnt / total
                 print(f"[{ep:6d}/{episodes}]  "
                       f"miss:{miss_r:.0%}  "
                       f"1피:{one_r:.0%}  "
                       f"2피:{two_r:.0%}  "
-                      f"총보상:{total_reward:.1f}  "
-                      f"생존:{alive_r}  "
-                      f"터치:{touch_r}")
-                writer.writerow([ep, f"{miss_r:.4f}", f"{one_r:.4f}", f"{two_r:.4f}", f"{total_reward:.2f}", f"{alive_r}", f"{touch_r}"])
+                      f"총보상:{total_reward:.1f}")
+                writer.writerow([ep, f"{miss_r:.4f}", f"{one_r:.4f}", f"{two_r:.4f}", f"{total_reward:.2f}"])
                 f.flush()
                 counts       = {0: 0, 1: 0, 2: 0}
                 total_reward = 0.0
-                alive_cnt = 0
-                touch_cnt = 0
 
-                for _ in range(3):
-                    _demo(agent)
+            if ep % render_every == 0:
+                _demo(agent)
 
-            if ep % save_every == 0:
-
-                agent.save(model_path)
-                print(f"저장 완료: {model_path}")
+    agent.save(model_path)
+    print(f"저장 완료: {model_path}")
 
 
 def _demo(agent):
