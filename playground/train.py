@@ -35,6 +35,7 @@ def train(episodes=5000, train_section=500, n_test=50, save_every=1000, model_no
         model_path = os.path.join(_MODELS_DIR, f"model_{model_no}.pth")
         ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         log_path = os.path.join(_LOGS_DIR, f"log_model_{model_no}_[{ts}].csv")
+        save_counter(model_no)
 
     env   = BilliardEnv(render=False)
     agent = Agent(lr=5e-4)
@@ -84,7 +85,7 @@ def train(episodes=5000, train_section=500, n_test=50, save_every=1000, model_no
             counts = [0, 0, 0, 0, 0]
             total_reward = 0.0
 
-            if episode_elapsed % save_every > save_timing:
+            if episode_elapsed % save_every >= save_timing:
                 agent.save(model_path)
                 print(f"Save complete: {model_path}")
                 save_timing = episode_elapsed % save_every

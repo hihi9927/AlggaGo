@@ -12,6 +12,8 @@ MARGIN = 15
 # ── Stone ── exact same values as AlggaGo/physics.py ─────────────────────────
 STONE_RADIUS = 25
 STONE_MASS   = 1
+INIT_BLACK_X = MARGIN + STONE_RADIUS * 2
+INIT_BLACK_Y = HEIGHT / 2
 
 # ── Force ── exact same values as AlggaGo/physics.py ─────────────────────────
 MAX_DRAG_LENGTH  = 100
@@ -100,7 +102,7 @@ class BilliardEnv:
         self.black:             pymunk.Shape
         self.whites:            list = []
         self.hit:               list = [False, False]
-        self.first_hit_black_pos: tuple = (0, 0)
+        self.first_hit_black_pos: tuple = (INIT_BLACK_X, INIT_BLACK_Y)
         self._white_contacted:  bool = False
         self.done:              bool = False
         self.screen: pygame.Surface | None = None
@@ -243,9 +245,16 @@ class BilliardEnv:
                     if not (MARGIN < x < WIDTH - MARGIN and MARGIN < y < HEIGHT - MARGIN):
                         self.hit[i] = True
                         self.space.remove(w, w.body)
-                if (not self._white_contacted) and (x - bx) * (x - bx) + (y - by) * (y - by) < STONE_RADIUS * STONE_RADIUS:
-                    self._white_contacted = True
-                    self.first_hit_black_pos = (bx, by)
+                if (not self._white_contacted):
+                    #print(f"bx = {bx}, by = {by}, wx = {x}, wy = {y}")
+                    k = (x - bx) * (x - bx) + (y - by) * (y - by)
+                    r = STONE_RADIUS * STONE_RADIUS
+                    
+                    #print(f"k = {k}, r = {r}")
+                    if k <= r + 1e-2:
+                        self._white_contacted = True
+                        self.first_hit_black_pos = (bx, by)
+                        print("!!")
 
             if self.do_render:
                 self.draw()
@@ -280,19 +289,18 @@ class BilliardEnv:
         n = sum(self.hit)
         black_alive = self.black in self.space.shapes
 
-        if self._white_contacted:
-
-
+        d = math.hypot(self.first_hit_black_pos[0] - INIT_BLACK_X, self.first_hit_black_pos[1] - INIT_BLACK_Y) / 1000 + 1
+        #print(f"d: {d}")
         if black_alive:
-            if n == 2: return 3.0
-            if n == 1: return 2.0
-            if self._white_contacted: return 1.0
-            return -2.0
+            if n == 2: return 3.0 + d
+            if n == 1: return 2.0 + d
+            if self._white_contacted: return 1.0 + 0.9 * d
+            return -2.0 + d
         else:
-            if n == 2: return 3.0
-            if n == 1: return 2.0
-            if self._white_contacted: return 0.5
-            return -2.0
+            if n == 2: return 3.0 + 0.9 * d
+            if n == 1: return 2.0 + 0.9 * d
+            if self._white_contacted: return 0.5 + 0.5 * d
+            return -2.0 + d
 
     # ── Observation ────────────────────────────────────────────────────────────
     def _obs(self) -> np.ndarray:
