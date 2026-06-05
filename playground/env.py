@@ -248,13 +248,13 @@ class BilliardEnv:
                 if (not self._white_contacted):
                     #print(f"bx = {bx}, by = {by}, wx = {x}, wy = {y}")
                     k = (x - bx) * (x - bx) + (y - by) * (y - by)
-                    r = STONE_RADIUS * STONE_RADIUS
+                    r = STONE_RADIUS * STONE_RADIUS * 4
                     
                     #print(f"k = {k}, r = {r}")
                     if k <= r + 1e-2:
                         self._white_contacted = True
                         self.first_hit_black_pos = (bx, by)
-                        print("!!")
+                        #print("!!")
 
             if self.do_render:
                 self.draw()
@@ -287,19 +287,19 @@ class BilliardEnv:
     # ── Reward ─────────────────────────────────────────────────────────────────
     def _reward(self) -> float:
         n = sum(self.hit)
-        black_alive = self.black in self.space.shapes
-
+        black_alive = self.black in self.space.shapes        
         d = math.hypot(self.first_hit_black_pos[0] - INIT_BLACK_X, self.first_hit_black_pos[1] - INIT_BLACK_Y) / 1000 + 1
+
         #print(f"d: {d}")
         if black_alive:
             if n == 2: return 3.0 + d
             if n == 1: return 2.0 + d
             if self._white_contacted: return 1.0 + 0.9 * d
-            return -2.0 + d
+            return -2.0 + 0.8 * d
         else:
-            if n == 2: return 3.0 + 0.9 * d
-            if n == 1: return 2.0 + 0.9 * d
-            if self._white_contacted: return 0.5 + 0.5 * d
+            if n == 2: return 2.5
+            if n == 1: return 1.5
+            if self._white_contacted: return 0.5
             return -2.0 + d
 
     # ── Observation ────────────────────────────────────────────────────────────

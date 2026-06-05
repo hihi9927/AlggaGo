@@ -30,7 +30,7 @@ def save_counter(no=0):
 def train(episodes=5000, train_section=500, n_test=50, save_every=1000, model_no=None, model_path=_DEFAULT_MODEL, log_path=None):
     os.makedirs(_MODELS_DIR, exist_ok=True)
     os.makedirs(_LOGS_DIR, exist_ok=True)
-    if model_no is None or log_path is None:
+    if model_no is None or 0 == model_no or log_path is None:
         model_no = load_counter() + 1
         model_path = os.path.join(_MODELS_DIR, f"model_{model_no}.pth")
         ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -161,4 +161,5 @@ def watch(model_path="models/model.pth", rounds=15):
 
 
 if __name__ == "__main__":
-    train()
+    model_no = int(input("Enter the model number. If you want new model, enter 0\n"))
+    train(model_no=model_no)

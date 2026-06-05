@@ -33,6 +33,7 @@ def watch(model_path=_MODEL):
             break
 
         angle, force = agent.act(obs, greedy=True)
+        print(f"angle: {angle}, force: {force}")
         _, reward, _, info = env.step(angle, force)
 
         env.draw(message=labels[info["hits"]])
@@ -43,4 +44,8 @@ def watch(model_path=_MODEL):
 
 
 if __name__ == "__main__":
-    watch()
+    model_no = int(input("Enter the model number: "))
+    model_path = ""
+    if model_no == 0: model_path = _MODEL
+    else: model_path = f"models/model_{model_no}.pth"
+    watch(model_path=model_path)
